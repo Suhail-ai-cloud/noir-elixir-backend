@@ -47,25 +47,29 @@ class OrderCreateSerializer(serializers.Serializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source="product.name", read_only=True)
-    product_slug = serializers.CharField(source="product.slug", read_only=True)
     product_image = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
         fields = [
             "product_name",
-            "product_slug",
-            "product_image",
+            "size_ml",
             "quantity",
             "price",
+            "product_image",
         ]
 
     def get_product_image(self, obj):
         request = self.context.get("request")
-        image = obj.product.images.first()
-        if image and request:
-            return request.build_absolute_uri(image.image.url)
+
+        # Old orders: variant may be NULL
+        if obj.variant and obj.variant.product:
+            image = obj.variant.product.images.first()
+            if image:
+                if request:
+                    return request.build_absolute_uri(image.image.url)
+                return image.image.url
+
         return None
 
 

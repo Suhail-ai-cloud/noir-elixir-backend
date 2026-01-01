@@ -37,20 +37,30 @@ class CreateOrderView(APIView):
             pincode=serializer.validated_data.get("pincode"),
         )
 
-        for item in cart.items.select_related("product_variant"):
+        for item in cart.items.select_related("product_variant", "product_variant__product"):
             variant = item.product_variant
 
-            # 🔒 reduce stock
+            # 🔒 STOCK SAFETY CHECK
+            if variant.stock < item.quantity:
+                raise serializers.ValidationError(
+    f"Insufficient stock for {variant.product.name} {variant.size_ml}ml"
+)
+
+            # 🔻 Reduce stock
             variant.stock -= item.quantity
             variant.save(update_fields=["stock"])
 
+            # ✅ CREATE ORDER ITEM (WITH VARIANT INFO)
             OrderItem.objects.create(
                 order=order,
-                product=variant.product,
+                variant=variant,
+                product_name=variant.product.name,
+                size_ml=variant.size_ml,
                 quantity=item.quantity,
                 price=variant.price,
             )
 
+        # 🧹 Clear cart only after success
         clear_cart(cart)
 
         return Response(

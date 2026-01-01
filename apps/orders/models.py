@@ -48,13 +48,22 @@ class OrderItem(models.Model):
         on_delete=models.CASCADE,
         related_name="items"
     )
-    product = models.ForeignKey(
-    "products.Product",
-    on_delete=models.PROTECT
+    variant = models.ForeignKey(
+    "products.ProductVariant",
+    on_delete=models.PROTECT,
+    related_name="order_items",
+    null=True,        # 👈 TEMP
+    blank=True        # 👈 TEMP
 )
+
+# Snapshot fields (VERY IMPORTANT)
+    product_name = models.CharField(max_length=200)
+    size_ml = models.PositiveIntegerField()
+
 
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"{self.product} x {self.quantity}"
+        return f"{self.product_name} {self.size_ml}ml x {self.quantity}"
+
