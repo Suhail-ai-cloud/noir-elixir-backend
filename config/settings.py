@@ -281,3 +281,18 @@ DEFAULT_FROM_EMAIL = f"Noir Elixir <{EMAIL_HOST_USER}>"
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 # print("EMAIL USER:", EMAIL_HOST_USER)
+
+
+
+
+import os
+from django.contrib.auth import get_user_model
+
+if os.getenv("CREATE_SUPERUSER") == "True":
+    User = get_user_model()
+    if not User.objects.filter(username="admin").exists():
+        User.objects.create_superuser(
+            username="admin",
+            email="admin@gmail.com",
+            password="admin123"
+        )
